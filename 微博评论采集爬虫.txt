@@ -1,0 +1,57 @@
+import requests
+import csv
+import re
+
+"""将爬取的数据保存到csv文件中"""
+f = open('微博评论采集1.csv', mode='a',encoding='utf-8', newline='')
+csv_write = csv.DictWriter(f, fieldnames=[
+        #'用户',
+        #'地区',
+        '评论'
+])
+weiboid = 4781422999244259#填自己的
+
+
+base_url = 'https://m.weibo.cn/comments/hotflow?id={weiboid}&mid={weiboid}&max_id={max_id}&max_id_type={max_type}'
+#注1 改成自己爬取的博文界面，按照上面的格式替换掉id等，我自己的原本是ttps://m.weibo.cn/comments/hotflow?id=4781422999244111&mid=4781422991234567&max_id_type=0
+headers = {
+    'Cookie': '',#需要填写
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:108.0) Gecko/20100101 Firefox/108.0',
+    'Referer': 'https://m.weibo.cn/detail/4846840208167976'
+}
+#分析时可见第一页评论和后面的评论不一样，以下是第一页评论的
+url = 'https://m.weibo.cn/comments/hotflow?id={weiboid}&mid={weiboid}&max_id_type=0'.format(weiboid=weiboid)
+#同上baseurl
+response = requests.get(url, headers=headers, timeout=10)
+jsondata = response.json()
+max_id = jsondata['data']['max_id']
+max_type = jsondata['data']['max_id_type']
+for index in jsondata['data']['data']:
+    content = ''.join(re.findall('[\u4e00-\u9fa5]+', index['text']))
+    dit = {
+        #'用户': index['user']['screen_name'],
+        #'地区': index['source'].replace('来自', ''),
+        '评论': content
+    }
+    csv_write.writerow(dit)
+    print(dit)
+#以下是其余评论的
+i = 1
+page = int(input('您想要爬几页'))
+for i in range(1, page):
+    i += 1
+    print('正在爬取第%i页' % i)
+    url=base_url.format(max_id=max_id, weiboid=weiboid, max_type=max_type)
+    response = requests.get(url, headers=headers, timeout=30)
+    jsondata = response.json()
+    max_id = jsondata['data']['max_id']
+    max_type = jsondata['data']['max_id_type']
+    for index in jsondata['data']['data']:
+        content = ''.join(re.findall('[\u4e00-\u9fa5]+', index['text']))
+        dit = {
+            #'用户': index['user']['screen_name'],
+            #'地区': index['source'].replace('来自', ''),
+            '评论': content
+        }
+        csv_write.writerow(dit)
+        print(dit)
