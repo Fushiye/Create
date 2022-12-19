@@ -1,0 +1,30 @@
+import wordcloud as wc
+import jieba.analyse
+import collections
+#import jieba
+# import numpy as np
+# from PIL import Image
+
+with open("微博评论采集.csv", mode="r", encoding="utf-8") as fp:
+    content = fp.read()
+#print(content)
+
+jieba.analyse.set_stop_words("stopword.txt")
+res = jieba.cut(content)
+res = " ".join(res)
+word_list = []
+for word in res:
+    word_list.append(word)
+word_count = collections.Counter(word_list)
+word_count_top = word_count.most_common(200)
+print(word_count_top)
+
+words = " ".join(jieba.analyse.extract_tags(content, topK=200))
+words = words.replace(" ", "\n")
+print(words)
+word_cloud = wc.WordCloud(font_path="simsun.ttc", background_color='White', max_words=1000, width=1000, height=500, scale=1 )
+word_cloud.generate(words)
+f = open('词汇.txt', 'a', encoding='utf-8')
+f.write(words)
+f.close()
+word_cloud.to_file("wordcloud.png")
